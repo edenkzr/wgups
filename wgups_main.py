@@ -5,7 +5,7 @@ import csv
 class ChainingHashTable:
 
     #constructor initializing table with empty lists
-    def __init__(self, capacity = 10):
+    def __init__(self, capacity = 40):
         self.table = []
         for i in range(capacity):
             self.table.append([])
@@ -57,7 +57,7 @@ class ChainingHashTable:
                 bucket_list.remove(kv[0], kv[1])
 
 class Package:
-    def __init__(self, package_ID, address, city, state, zip, delivery_deadline, weight):
+    def __init__(self, package_ID, address, city, state, zip, delivery_deadline, weight, constraint, status):
         self.package_ID = package_ID
         self.address = address
         self.city = city
@@ -65,9 +65,23 @@ class Package:
         self.zip = zip
         self.delivery_deadline = delivery_deadline
         self.weight = weight
+        self.constraint = constraint
+        self.status = status
 
     def __str__(self):
-        return "%s, %s, %s, %s, %s, %s, %s" % (self.package_ID, self.address, self.city, self.state, self.zip, self.delivery_deadline, self.weight)
+        return "%s, %s, %s, %s, %s, %s, %s, %s, %s" % (self.package_ID, self.address, self.city, self.state, self.zip, self.delivery_deadline, self.weight, self.constraint, self.status)
+
+class Truck:
+    def __init__(self, speed, miles, currentLocation, departTime, packages):
+        self.speed = speed
+        self.miles = miles
+        self.currentLocation = currentLocation
+        self.time = departTime
+        self.departTime = departTime
+        self.packages = packages
+
+    def __str__(self):
+        return "%s,%s,%s,%s,%s,%s" % (self.speed, self.miles, self.currentLocation, self.time, self.departTime, self.packages)
 
 def loadPackageData(fileName):
     with open(fileName) as Packages:
@@ -81,17 +95,52 @@ def loadPackageData(fileName):
             packageZip = package[4]
             packageDeliveryDeadline = package[5]
             packageWeight = package[6]
+            if package[7]:
+                packageConstraint = package[7]
+            else:
+                packageConstraint = None
+            packageStatus = "at hub"
 
             p = Package(packageID, packageAddress, packageCity, packageState, packageZip,
-                        packageDeliveryDeadline, packageWeight)
-
-            print(p)
+                        packageDeliveryDeadline, packageWeight, packageConstraint, packageStatus)
 
             h.insert(packageID, p)
+            #print(p)
+
+def loadDistance(fileName):
+    distances = {}
+    with open(fileName, "r") as file:
+        reader = csv.reader(file)
+        headers = next(reader)
+
+        for row in reader:
+            key = row[0].strip()
+            distances[key] = {headers[i]: float(row[i]) if row[i] else None for i in range(1, len(row))}
+
+    return distances
+
+def findDistance(a,b):
+    distance = distanceMatrix[a][b]
+    if distance == None:
+        distance = distanceMatrix[b][a]
+    return distance
+
 
 
 h = ChainingHashTable()
 loadPackageData("wgups_packages.csv")
+distanceMatrix = loadDistance('wgups_distances.csv')
 
-for i in range(len(h.table)):
-    print("Key: {} and Package: {}".format(i+1, h.search(i+1)))
+"""for i in range(len(h.table)):
+   print("Key: {} and Package: {}".format(i+1, h.search(i+1)))
+
+for key, row in distanceMatrix.items():
+    print(f"[ {key} , {row} ]")"""
+
+package = h.search(1)
+package2 = h.search(40)
+print(package.address)
+print(package2.address)
+
+
+print(findDistance(package.address, package2.address))
