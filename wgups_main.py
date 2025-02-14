@@ -1,5 +1,5 @@
 import csv
-
+import datetime
 
 #class for hash table with collision handling capabilities via chaining
 class ChainingHashTable:
@@ -67,24 +67,29 @@ class Package:
         self.weight = weight
         self.constraint = constraint
         self.status = status
+        self.delivery_time = None
+        self.departure_time = None
+
 
     def __str__(self):
-        return "%s, %s, %s, %s, %s, %s, %s, %s, %s" % (self.package_ID, self.address, self.city, self.state, self.zip, self.delivery_deadline, self.weight, self.constraint, self.status)
+        return "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (self.package_ID, self.address, self.city, self.state,
+                                                               self.zip, self.delivery_deadline, self.weight,
+                                                               self.constraint, self.status, self.delivery_time, self.departure_time)
 
 class Truck:
-    def __init__(self, speed, miles, currentLocation, departTime, packages):
-        self.speed = speed
-        self.miles = miles
-        self.currentLocation = currentLocation
-        self.time = departTime
-        self.departTime = departTime
+    def __init__(self, departure_time, packages):
+        self.speed = 18.0
+        self.miles = 0.0
+        self.current_stop = "4001 South 700 East"
+        self.time = departure_time
+        self.departure_time = departure_time
         self.packages = packages
 
     def __str__(self):
-        return "%s,%s,%s,%s,%s,%s" % (self.speed, self.miles, self.currentLocation, self.time, self.departTime, self.packages)
+        return "%s,%s,%s,%s,%s,%s" % (self.speed, self.miles, self.current_stop, self.time, self.departure_time, self.packages)
 
-def loadPackageData(fileName):
-    with open(fileName) as Packages:
+def loadPackageData(file_name):
+    with open(file_name) as Packages:
         packageData = csv.reader(Packages, delimiter=',')
         next(packageData)
         for package in packageData:
@@ -107,9 +112,9 @@ def loadPackageData(fileName):
             h.insert(packageID, p)
             #print(p)
 
-def loadDistance(fileName):
+def loadDistance(file_name):
     distances = {}
-    with open(fileName, "r") as file:
+    with open(file_name, "r") as file:
         reader = csv.reader(file)
         headers = next(reader)
 
@@ -120,22 +125,54 @@ def loadDistance(fileName):
     return distances
 
 def findDistance(a,b):
-    distance = distanceMatrix[a][b]
+    distance = distance_matrix[a][b]
     if distance == None:
-        distance = distanceMatrix[b][a]
+        distance = distance_matrix[b][a]
     return distance
 
+
+def packageDelivery(truck):
+    routing = []
+    route = []
+
+    for ID in truck.packages:
+        package = h.search(ID)
+        routing.append(package)
+
+    while len(routing) > 0:
+        next_stop = float("inf")
+        next_package = None
+        for package in routing:
+            if findDistance(truck.current_stop, package.address) <= next_stop:
+                next_stop = findDistance(truck.current_stop, package.address)
+                next_package = package
+        route.append(next_package.package_ID)
+        routing.remove(next_package)
+        truck.miles += next_stop
+        truck.current_stop = next_package.address
+        truck.time += datetime.timedelta(hours=next_stop / 18)
+        next_package.delivery_time = truck.time
+        next_package.departure_time = truck.departure_time
+
+    for id in route:
+        print(h.search(id))
+
+    print(truck)
 
 
 h = ChainingHashTable()
 loadPackageData("wgups_packages.csv")
-distanceMatrix = loadDistance('wgups_distances.csv')
+distance_matrix = loadDistance('wgups_distances.csv')
 
+
+truck1 = Truck(datetime.timedelta(hours=9, minutes=5), [1,6,25,13,40,26,34,17,29])
+truck2 = Truck(datetime.timedelta(hours=8), [14,15,16,20,19,3,18,36,37,5,38,31,30,7,35])
+truck3 = Truck(datetime.timedelta(hours=10, minutes=20), [9,8,39,28,32,33,2,4,10,11,12,21,22,23,24,27])
 """for i in range(len(h.table)):
    print("Key: {} and Package: {}".format(i+1, h.search(i+1)))
 
-for key, row in distanceMatrix.items():
-    print(f"[ {key} , {row} ]")"""
+for key, row in distance_matrix.items():
+    print(f"[ {key} , {row} ]")
 
 package = h.search(1)
 package2 = h.search(40)
@@ -144,3 +181,6 @@ print(package2.address)
 
 
 print(findDistance(package.address, package2.address))
+"""
+
+test1 = packageDelivery(truck1)
