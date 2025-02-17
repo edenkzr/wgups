@@ -154,11 +154,29 @@ def packageDelivery(truck):
         next_package.delivery_time = truck.time
         next_package.departure_time = truck.departure_time
 
-    for id in route:
+    """for id in route:
         print(h.search(id))
 
-    print(truck)
+    print(truck)"""
 
+def updateStatus(package_ID, time):
+
+    package = h.search(package_ID)
+
+    if time < package.departure_time:
+
+        return package.status
+
+    elif package.departure_time <= time < package.delivery_time:
+
+        package.status = "en route"
+
+        return package.status
+    else:
+
+        package.status = "delivered"
+
+        return package.status
 
 h = ChainingHashTable()
 loadPackageData("wgups_packages.csv")
@@ -168,6 +186,10 @@ distance_matrix = loadDistance('wgups_distances.csv')
 truck1 = Truck(datetime.timedelta(hours=9, minutes=5), [1,6,25,13,40,26,34,17,29])
 truck2 = Truck(datetime.timedelta(hours=8), [14,15,16,20,19,3,18,36,37,5,38,31,30,7,35])
 truck3 = Truck(datetime.timedelta(hours=10, minutes=20), [9,8,39,28,32,33,2,4,10,11,12,21,22,23,24,27])
+t1 = packageDelivery(truck1)
+t2 = packageDelivery(truck2)
+t3 = packageDelivery(truck3)
+
 """for i in range(len(h.table)):
    print("Key: {} and Package: {}".format(i+1, h.search(i+1)))
 
@@ -181,6 +203,71 @@ print(package2.address)
 
 
 print(findDistance(package.address, package2.address))
-"""
 
-test1 = packageDelivery(truck1)
+
+test1 = packageDelivery(truck1)"""
+
+print("Welcome to WGUPS!")
+while True:
+
+    response = input("Please select an option from the following:\n1. Display total miles travelled.\n2. Display delivery status "
+                     "of a package.\n3. Display package delivery time.\n4. exit.\nYour choice:"
+                     )
+
+    if response == "1":
+
+        miles = truck1.miles + truck2.miles + truck3.miles
+        print(f"Total miles travelled: {miles}")
+
+    elif response == "2":
+
+        try:
+
+            id = int(input("Enter a valid package ID: "))
+
+            if 1 <= id <= len(h.table):
+
+                time = input("Enter package delivery time 'format HH:MM': ")
+                hour,min = time.split(":")
+                requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
+                status = updateStatus(id, requested_time)
+                print(f"At {time}, package {id} was {status}")
+
+            else:
+
+                print("Invalid package ID.")
+
+        except ValueError:
+
+            print("Invalid input. Please enter a valid package ID.")
+
+
+    elif response == "3":
+
+        try:
+
+            id = int(input("Enter a valid package ID: "))
+
+            if 1 <= id <= len(h.table):
+
+                result = h.search(id)
+                print(f"Package {id} was delivered at {result.delivery_time}")
+
+            else:
+
+                print("Invalid package ID.")
+
+        except ValueError:
+
+            print("Invalid input. Please enter a valid package ID.")
+
+    elif response == "4":
+
+        print("Goodbye!")
+        break
+
+    else:
+
+        print("Please select from the provided options 'Type 1 - 4'.")
+
+
