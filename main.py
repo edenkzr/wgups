@@ -1,7 +1,8 @@
+                                        #Diego Cuadros | 011746822 | dcuadro@wgu.edu
 import csv
 import datetime
 
-#class for hash table with collision handling capabilities via chaining
+#class for hash table with collision handling capabilities via chaining and resizing [Overall Time: O(n) but Average and likely O(1) , Space O(n)]
 class ChainingHashTable:
 
     #Hash table constructor
@@ -47,10 +48,10 @@ class ChainingHashTable:
             if kv[0] == key:
                 bucket_list.remove(kv[0], kv[1])
 
-#Class representing package information with attributes listed for routing and tracking purposes
+#Class representing package information with attributes listed for routing and tracking purposes [Overall Time: O(1), Space: O(1)]
 class Package:
 
-    #Constructor
+    #Constructor [Time: O(1) package initialization, Space: O(1) package is a fixed amount of space]
     def __init__(self, package_ID, address, city, state, zip, delivery_deadline, weight, constraint):
         self.package_ID = package_ID
         self.address = address
@@ -64,21 +65,21 @@ class Package:
         self.delivery_time = None
         self.departure_time = None
 
-    #Override print to show detailed package data
+    #Override print to show detailed package data  [Time: O(1) string formatting with fixed data, Space: O(1) string is a fixed amount of space]
     def __str__(self):
         return "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (self.package_ID, self.address, self.city, self.state,
                                                                self.zip, self.delivery_deadline, self.weight,
                                                                self.constraint, self.status, self.delivery_time, self.departure_time)
 
-#Class representing trucks utilized for package delivery services with attributes for tracking and routing purposes
+#Class representing trucks utilized for package delivery services with attributes for tracking and routing purposes [Overall Time: O(1), Space: O(1)]
 class Truck:
 
-    #Constructor only takes 2 arguments that must be verified with respect to constraints.
+    #Constructor only takes 2 arguments that must be verified with respect to constraints. [Time: O(1) package initialization, Space: O(1) package is a fixed amount of space]
     def __init__(self, departure_time, packages):
 
-        if departure_time < datetime.timedelta(hours=8):
+        if departure_time < datetime.timedelta(hours=8): #verify trucks cant leave earlier than 8.
             raise ValueError("Trucks cannot depart before 8:00 A.M.")
-        if len(packages) > 16:
+        if len(packages) > 16: #verify trucks cant carry more than 16 packages
             raise ValueError("Trucks cannot carry more than 16 packages.")
         self.speed = 18.0
         self.miles = 0.0
@@ -88,16 +89,16 @@ class Truck:
         self.packages = packages
         self.route = []
 
-    #Override print to show detailed truck data
+    #Override print to show detailed truck data [Time: O(1) string formatting with fixed data, Space: O(1) string is a fixed amount of space]
     def __str__(self):
         return ("Mph: %s ,Total miles: %s, Last stop: %s, Time of completion: %s, Departed at: %s, Packages: %s, Route taken: "
                 "%s" %
                 (self.speed, self.miles, self.current_stop, self.time, self.departure_time, self.packages, self.route))
 
-#Load Hash Table with package objects [O(n)]
+#Load Hash Table with package objects [Overall Time: O(n), Space: O(n)]
 def loadPackageData(file_name):
 
-    #Load from csv necessary attribute information
+    #Load from csv necessary attribute information [Time: O(n) n number of packages in a csv file, Space: O(n) creating n objects and storing in hash table]
     with open(file_name) as Packages:
         packageData = csv.reader(Packages, delimiter=',')
         next(packageData)
@@ -109,7 +110,7 @@ def loadPackageData(file_name):
             package_zip = package[4]
             package_delivery_deadline = package[5]
             package_weight = package[6]
-            if package[7]:
+            if package[7]: #if there is a constraint take it else its None
                 package_constraint = package[7]
             else:
                 package_constraint = None
@@ -121,10 +122,10 @@ def loadPackageData(file_name):
             h.insert(package_ID, p)
             #print(p)
 
-#Load distance information into 2D dictionary 'distance matrix' [O(n*m)]
+#Load distance information into 2D dictionary 'distance matrix' [Overall Time: O(n*m), Space: O(n*m)]
 def loadDistance(file_name):
 
-    #Load csv information into 2d dictionary
+    #Load csv information into 2d dictionary [Time: O(n*m) n rows times m columns per csv file, Space: O(n*m) store n times m distance values]
     distances = {}
     with open(file_name, "r") as file:
         reader = csv.reader(file)
@@ -138,18 +139,19 @@ def loadDistance(file_name):
 
     return distances
 
-#Utilize distance matrix to quickly find distance values between point a and point b [O(1)]
+#Utilize distance matrix to quickly find distance values between point a and point b [Overall Time: O(1)], Space: O(1)]
 def findDistance(a,b):
 
-    #if distance comes up as None, invert the inputs
+    #if distance comes up as None, invert the inputs [Time: O(1) dictionary look up is always constant , Space: O(1) assigngments and ifs are constant]
     distance = distance_matrix[a][b]
     if distance == None:
         distance = distance_matrix[b][a]
     return distance
 
-#Main algorithm for routing 'Nearest Neighbor' [O(N^2)]
+#Main algorithm for routing 'Nearest Neighbor' [Overall Time: O(n^2), Space: O(n)]
 def packageDelivery(truck):
 
+    #Generate package objects from truck package list [Time: Worst case O(n^2), Average O(n) for n ids in truck list, Space: O(n) create routing list with n objects]
     routing = []
     route = []
     for ID in truck.packages:
@@ -157,6 +159,7 @@ def packageDelivery(truck):
         routing.append(package)
 
     #While we still have packages, continually update next_stop and next_package information for necessary sorting and arithmetic operations
+    #[Time: O(n^2) while n > 0 iterate through n packages to find the next stop, Space O(n): create route list with n packages according to findDistance comparisons]
     while len(routing) > 0:
         next_stop = float("inf")
         next_package = None
@@ -168,22 +171,24 @@ def packageDelivery(truck):
                 next_package = package
         route.append(next_package.package_ID)
         routing.remove(next_package)
-        truck.miles += next_stop
-        truck.current_stop = next_package.address
-        truck.time += datetime.timedelta(hours=next_stop / truck.speed)
-        next_package.delivery_time = truck.time
-        next_package.departure_time = truck.departure_time
+        truck.miles += next_stop #keep summing miles for final calculations
+        truck.current_stop = next_package.address #keep track of where the truck is at
+        truck.time += datetime.timedelta(hours=next_stop / truck.speed) #track the truck's time on the road
+        next_package.delivery_time = truck.time #record package delivery_time for tracking purposes
+        next_package.departure_time = truck.departure_time #record package departure_time for tracking purposes
 
     truck.route = route
 
+    #check algorithm is working properly
     """for id in route:
         print(h.search(id))
 
     print(truck)"""
     
-#Retrieve and change status information of specified packages at specified times [O(1)]
+#Retrieve and change status information of specified packages at specified times [Overall Time: O(n), Space: O(1)]
 def updateStatus(package_ID, time):
 
+    #return package for time comparison [Time: o(n) hash table worst case is linear but average is O(1), Space: O(1) constant space used]
     package = h.search(package_ID)
     if time < package.departure_time:
 
@@ -211,6 +216,7 @@ t1 = packageDelivery(truck1)
 t2 = packageDelivery(truck2)
 t3 = packageDelivery(truck3)
 
+#tests
 """for i in range(len(h.table)):
    print("Key: {} and Package: {}".format(i+1, h.search(i+1)))
 
@@ -222,9 +228,14 @@ test_package2 = h.search(40)
 print(test_package.address)
 print(test_package2.address)
 print(findDistance(package.address, package2.address))
-test_delivery = packageDelivery(truck1)"""
+test_delivery = packageDelivery(truck1)
+for i in range(1,41):
+    time = datetime.timedelta(hours=10)
+    status = updateStatus(i, time)
+    print(f"At {time}, package {i} was {status}.")"""
 
-#Continous Loop for UI purposes [O(1)]
+#Continous Loop for UI purposes [Overall Time:O(1), Space: O(1)]
+#UI loop itself doesnt introduce any significant time or space usages as its a simple I/O system
 print("Welcome to WGUPS!")
 while True:
 
@@ -239,13 +250,14 @@ while True:
         if choice == "1":
 
             miles = truck1.miles + truck2.miles + truck3.miles
-            print(f"Total miles travelled: {miles}")
+            print(f"Total miles travelled: {miles}\n1"
+                  f"")
 
         if choice == "2":
 
             print(f"Truck 1 details: {truck1}")
             print(f"Truck 2 details: {truck2}")
-            print(f"Truck 3 details: {truck3}")
+            print(f"Truck 3 details: {truck3}\n")
 
     elif response == "2":
 
@@ -259,7 +271,7 @@ while True:
                 hour,min = time.split(":")
                 requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
                 status = updateStatus(id, requested_time)
-                print(f"At {time}, package {id} was {status}")
+                print(f"At {time}, package {id} was {status}.\n")
 
             else:
 
@@ -279,7 +291,7 @@ while True:
             if 1 <= id <= len(h.table):
 
                 result = h.search(id)
-                print(f"Package {id} was delivered at {result.delivery_time}, deadline at {result.delivery_deadline}")
+                print(f"Package {id} was delivered at {result.delivery_time}, deadline at {result.delivery_deadline}.\n")
 
             else:
 
@@ -299,3 +311,4 @@ while True:
         print("Please select from the provided options 'Type 1 - 4'.")
 
 
+1
