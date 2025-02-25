@@ -286,8 +286,7 @@ while True:
         if choice == "1":
 
             miles = truck1.miles + truck2.miles + truck3.miles
-            print(f"Total miles travelled: {miles}\n"2
-            )
+            print(f"Total miles travelled: {miles}\n")
 
         if choice == "2":
 
@@ -315,7 +314,7 @@ while True:
 
         except ValueError:
 
-            print("Invalid input. Please enter a valid package ID.[1-40]2")
+            print("Invalid input. Please enter a valid package ID.[1-40]")
 
 
     elif response == "3":
