@@ -2,7 +2,7 @@
 import csv
 import datetime
 
-#class for hash table with collision handling capabilities via chaining and resizing [Overall Time: O(n) but Average and likely O(1) , Space O(n)]
+#class for hash table with collision handling capabilities via chaining and resizing [Overall Time: O(n), Space O(n)]
 class ChainingHashTable:
 
     #Hash table constructor
@@ -10,9 +10,30 @@ class ChainingHashTable:
         self.table = []
         for i in range(capacity):
             self.table.append([])
+        self.size = 0
+
+    #resize table to maintain efficiency
+    def resize(self):
+
+        #Double size of table
+        new_capacity = len(self.table) * 2
+        new_table = [[] for _ in range(new_capacity)]
+
+        #rehash into new table
+        for bucket in self.table:
+            for key, value in bucket:
+                new_index =  hash(key) % new_capacity
+                new_table[new_index].append((key, value))
+
+        #update table
+        self.table = new_table
 
     #method for insertions and updates
     def insert(self, key, value):
+
+        #check if threshold met for resize
+        if self.size / len(self.table) > 0.7:
+            self.resize()
 
         bucket = hash(key) % len(self.table)
         bucket_list = self.table[bucket]
@@ -24,6 +45,7 @@ class ChainingHashTable:
 
         key_value = [key, value]
         bucket_list.append(key_value)
+        self.size += 1 #update size for resize purposes
         return True
 
     #search via key
@@ -74,7 +96,7 @@ class Package:
 #Class representing trucks utilized for package delivery services with attributes for tracking and routing purposes [Overall Time: O(1), Space: O(1)]
 class Truck:
 
-    #Constructor only takes 2 arguments that must be verified with respect to constraints. [Time: O(1) package initialization, Space: O(1) package is a fixed amount of space]
+    #Constructor only takes 2 arguments that must be verified with respect to constraints. [Time: O(1) truck initialization, Space: O(1) truck is a fixed amount of space]
     def __init__(self, departure_time, packages):
 
         if departure_time < datetime.timedelta(hours=8): #verify trucks cant leave earlier than 8.
@@ -142,7 +164,7 @@ def loadDistance(file_name):
 #Utilize distance matrix to quickly find distance values between point a and point b [Overall Time: O(1)], Space: O(1)]
 def findDistance(a,b):
 
-    #if distance comes up as None, invert the inputs [Time: O(1) dictionary look up is always constant , Space: O(1) assigngments and ifs are constant]
+    #if distance comes up as None, invert the inputs [Time: O(1) dictionary look up is always constant , Space: O(1) assignments and ifs are constant]
     distance = distance_matrix[a][b]
     if distance == None:
         distance = distance_matrix[b][a]
@@ -188,7 +210,7 @@ def packageDelivery(truck):
 #Retrieve and change status information of specified packages at specified times [Overall Time: O(n), Space: O(1)]
 def updateStatus(package_ID, time):
 
-    #return package for time comparison [Time: o(n) hash table worst case is linear but average is O(1), Space: O(1) constant space used]
+    #return package for time comparison [Time: o(n) hash table worst case is linear but the LIKELY average is O(1), Space: O(1) constant space used]
     package = h.search(package_ID)
     if time < package.departure_time:
 
@@ -221,7 +243,8 @@ t3 = packageDelivery(truck3)
    print("Key: {} and Package: {}".format(i+1, h.search(i+1)))
 
 for key, row in distance_matrix.items():
-    print(f"[ {key} , {row} ]")
+    print(f"[ {key} , {row} ]")2
+    
 
 test_package = h.search(1)
 test_package2 = h.search(40)
@@ -235,7 +258,20 @@ for i in range(1,41):
     print(f"At {time}, package {i} was {status}.")"""
 
 #Continous Loop for UI purposes [Overall Time:O(1), Space: O(1)]
-#UI loop itself doesnt introduce any significant time or space usages as its a simple I/O system
+#UI loop itself doesn't introduce any significant time or space usages as its a simple I/O system
+#truck
+print( r"""                   _______________________________________________________
+              ____|                                                      |
+             /    |      __        ______ _   _ ____  ____               |
+            |     |      \ \      / / ___| | | |  _ \/ ___|              |             
+            /---, |       \ \ /\ / / |  _| | | | |_) \___ \              |           
+       -----#   | |        \ V  V /| |_| | |_| |  __/ ___) |             |                             
+       |    #   | |         \_/\_/  \____|\___/|_|   |____/              |                               
+  -----'----#   | |______________________________________________________|
+  |         #   |______====____   \___________________________________|
+ [_/,-,\"--"------ //,-,  ,-,\\\   |/             //,-,  ,-,  ,-,\\ __#
+   ( 0 )|===******||( 0 )( 0 )||-  o              '( 0 )( 0 )( 0 )||
+----'-'--------------'-'--'-'-----------------------'-'--'-'--'-'--------------""")
 print("Welcome to WGUPS!")
 while True:
 
@@ -250,8 +286,8 @@ while True:
         if choice == "1":
 
             miles = truck1.miles + truck2.miles + truck3.miles
-            print(f"Total miles travelled: {miles}\n1"
-                  f"")
+            print(f"Total miles travelled: {miles}\n"2
+            )
 
         if choice == "2":
 
@@ -267,7 +303,7 @@ while True:
 
             if 1 <= id <= len(h.table):
 
-                time = input("Enter package delivery time 'format HH:MM': ")
+                time = input("Enter package delivery time 'format HH:MM' Military Time: ")
                 hour,min = time.split(":")
                 requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
                 status = updateStatus(id, requested_time)
@@ -309,6 +345,3 @@ while True:
     else:
 
         print("Please select from the provided options 'Type 1 - 4'.")
-
-
-1
