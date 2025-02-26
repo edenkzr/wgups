@@ -84,25 +84,26 @@ class Package:
         self.weight = weight
         self.constraint = constraint
         self.status = "at hub"
-        self.delivery_time = None
         self.departure_time = None
+        self.delivery_time = None
+        self.truck = "unloaded"
 
     #Override print to show detailed package data  [Time: O(1) string formatting with fixed data, Space: O(1) string is a fixed amount of space]
     def __str__(self):
-        return "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (self.package_ID, self.address, self.city, self.state,
-                                                               self.zip, self.delivery_deadline, self.weight,
-                                                               self.constraint, self.status, self.delivery_time, self.departure_time)
+        return ("Package ID: %s | Address: %s, %s, %s, %s | Deadline: %s | Weight: %s | Notes: %s | Departure at: %s | Delivered at: %s" %
+                (self.package_ID, self.address, self.city, self.state, self.zip, self.delivery_deadline, self.weight,  self.constraint, self.departure_time,self.delivery_time))
 
 #Class representing trucks utilized for package delivery services with attributes for tracking and routing purposes [Overall Time: O(1), Space: O(1)]
 class Truck:
 
     #Constructor only takes 2 arguments that must be verified with respect to constraints. [Time: O(1) truck initialization, Space: O(1) truck is a fixed amount of space]
-    def __init__(self, departure_time, packages):
+    def __init__(self, truck_ID, departure_time, packages):
 
         if departure_time < datetime.timedelta(hours=8): #verify trucks cant leave earlier than 8.
             raise ValueError("Trucks cannot depart before 8:00 A.M.")
         if len(packages) > 16: #verify trucks cant carry more than 16 packages
             raise ValueError("Trucks cannot carry more than 16 packages.")
+        self.truck_ID = truck_ID
         self.speed = 18.0
         self.miles = 0.0
         self.current_stop = "4001 South 700 East"
@@ -113,7 +114,7 @@ class Truck:
 
     #Override print to show detailed truck data [Time: O(1) string formatting with fixed data, Space: O(1) string is a fixed amount of space]
     def __str__(self):
-        return ("Mph: %s ,Total miles: %s, Last stop: %s, Time of completion: %s, Departed at: %s, Packages: %s, Route taken: "
+        return ("Mph: %s | Total miles: %s | Last stop: %s | Time of completion: %s | Departed at: %s | Packages: %s | Route taken: "
                 "%s" %
                 (self.speed, self.miles, self.current_stop, self.time, self.departure_time, self.packages, self.route))
 
@@ -196,8 +197,9 @@ def packageDelivery(truck):
         truck.miles += next_stop #keep summing miles for final calculations
         truck.current_stop = next_package.address #keep track of where the truck is at
         truck.time += datetime.timedelta(hours=next_stop / truck.speed) #track the truck's time on the road
+        next_package.departure_time = truck.departure_time  # record package departure_time for tracking purposes
         next_package.delivery_time = truck.time #record package delivery_time for tracking purposes
-        next_package.departure_time = truck.departure_time #record package departure_time for tracking purposes
+        next_package.truck = truck.truck_ID #record which truck each package is on
 
     truck.route = route
 
@@ -215,25 +217,28 @@ def updateStatus(package_ID, time):
     if time < package.departure_time:
 
         #packages are pre-set to be 'at hub'
-        return package.status
+        #return package.status
+        return package
 
     elif package.departure_time <= time < package.delivery_time:
 
         package.status = "en route"
-        return package.status
+        #return package.status
+        return package
 
     else:
 
         package.status = "delivered"
-        return package.status
+        #return package.status
+        return package
 
 #Load all necessary data structures and class objects for program functionality
 h = ChainingHashTable()
 loadPackageData("wgups_packages.csv")
 distance_matrix = loadDistance('wgups_distances.csv')
-truck1 = Truck(datetime.timedelta(hours=9, minutes=5), [1,6,25,13,40,26,34,17,29])
-truck2 = Truck(datetime.timedelta(hours=8), [14,15,16,20,19,3,18,36,37,5,38,31,30,7,35])
-truck3 = Truck(datetime.timedelta(hours=10, minutes=20), [9,8,39,28,32,33,2,4,10,11,12,21,22,23,24,27])
+truck1 = Truck(1,datetime.timedelta(hours=9, minutes=5), [1,6,25,13,40,26,34,17,29])
+truck2 = Truck(2, datetime.timedelta(hours=8), [14,15,16,20,19,3,18,36,37,5,38,31,30,7,35])
+truck3 = Truck(3, datetime.timedelta(hours=10, minutes=20), [9,8,39,28,32,33,2,4,10,11,12,21,22,23,24,27])
 t1 = packageDelivery(truck1)
 t2 = packageDelivery(truck2)
 t3 = packageDelivery(truck3)
@@ -275,24 +280,27 @@ print( r"""                   __________________________________________________
 print("Welcome to WGUPS!")
 while True:
 
-    response = input("Please select an option from the following:\n1. Display truck information.\n2. Display package tracking information."
-                     "\n3. Display package delivery time.\n4. exit.\nChoose here:"
+    response = input("Please select an option from the following:\n1. Display truck details.\n2. Display single package status."
+                     "\n3. Display status for all packages.\n4. Display package delivery time.\n5. exit.\nChoose here:"
                      )
 
     if response == "1":
 
-        choice = input("Select an option:\n1. Display total mileage.\n2. Display details of trucks.\nChoose here: ")
+        choice = input("Select an option:\n1. Display total mileage.\n2. Display each truck's details.\nChoose here: ")
 
         if choice == "1":
 
             miles = truck1.miles + truck2.miles + truck3.miles
             print(f"Total miles travelled: {miles}\n")
 
-        if choice == "2":
+        elif choice == "2":
 
-            print(f"Truck 1 details: {truck1}")
-            print(f"Truck 2 details: {truck2}")
-            print(f"Truck 3 details: {truck3}\n")
+            print(f"Truck 1 details [ {truck1} ]")
+            print(f"Truck 2 details [ {truck2} ]")
+            print(f"Truck 3 details [ {truck3} ]\n")
+
+        else:
+            print("Invalid choice.")
 
     elif response == "2":
 
@@ -300,13 +308,13 @@ while True:
 
             id = int(input("Enter a valid package ID: "))
 
-            if 1 <= id <= len(h.table):
+            if 1 <= id <= 40:
 
-                time = input("Enter package delivery time 'format HH:MM' Military Time: ")
+                time = input("Please enter desired time 'format HH:MM' Military Time: ")
                 hour,min = time.split(":")
                 requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
                 status = updateStatus(id, requested_time)
-                print(f"At {time}, package {id} was {status}.\n")
+                print(f"At {time}, package {status.package_ID}'s status was {status.status}. [ {status} ]\n")
 
             else:
 
@@ -316,17 +324,26 @@ while True:
 
             print("Invalid input. Please enter a valid package ID.[1-40]")
 
-
     elif response == "3":
+
+        time = input("Please enter desired time, 'format HH:MM' Military Time: ")
+        hour,min = time.split(":")
+        requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
+        for i in range (1,41):
+            status = updateStatus(i, requested_time)
+            print(f"At {time}, package {status.package_ID}'s status was {status.status}. [ {status} ]")
+        print("")
+
+    elif response == "4":
 
         try:
 
             id = int(input("Enter a valid package ID: "))
 
-            if 1 <= id <= len(h.table):
+            if 1 <= id <= 40:
 
                 result = h.search(id)
-                print(f"Package {id} was delivered at {result.delivery_time}, deadline at {result.delivery_deadline}.\n")
+                print(f"Package {id} was delivered by Truck {result.truck} at {result.delivery_time}, deadline at {result.delivery_deadline}.\n")
 
             else:
 
@@ -336,7 +353,7 @@ while True:
 
             print("Invalid input. Please enter a valid package ID.[1-40]")
 
-    elif response == "4":
+    elif response == "5":
 
         print("Goodbye!")
         break
