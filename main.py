@@ -283,10 +283,12 @@ while True:
     response = input("Please select an option from the following:\n1. Display truck details.\n2. Display single package status."
                      "\n3. Display status for all packages.\n4. Display package delivery time.\n5. exit.\nChoose here:"
                      )
+    print("")
 
     if response == "1":
 
         choice = input("Select an option:\n1. Display total mileage.\n2. Display each truck's details.\nChoose here: ")
+        print("")
 
         if choice == "1":
 
@@ -331,8 +333,7 @@ while True:
         requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
         for i in range (1,41):
             status = updateStatus(i, requested_time)
-            print(f"At {time}, package {status.package_ID}'s status was {status.status}. [ {status} ]")
-        print("")
+            print(f"At {time}, package {status.package_ID}'s status was {status.status}. [ {status} ]\n")
 
     elif response == "4":
 
