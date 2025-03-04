@@ -83,15 +83,15 @@ class Package:
         self.delivery_deadline = delivery_deadline
         self.weight = weight
         self.constraint = constraint
-        self.status = "at hub"
+        self.status = "at the hub"
         self.departure_time = None
         self.delivery_time = None
         self.truck = "unloaded"
 
     #Override print to show detailed package data  [Time: O(1) string formatting with fixed data, Space: O(1) string is a fixed amount of space]
     def __str__(self):
-        return ("Package ID: %s | Address: %s, %s, %s, %s | Deadline: %s | Weight: %s | Notes: %s | Departure at: %s | Delivered at: %s" %
-                (self.package_ID, self.address, self.city, self.state, self.zip, self.delivery_deadline, self.weight,  self.constraint, self.departure_time,self.delivery_time))
+        return ("Truck ID: %s | Package ID: %s | Address: %s, %s, %s, %s | Deadline: %s | Weight: %s | Notes: %s | Departure at: %s | Delivered at: %s" %
+                (self.truck,self.package_ID, self.address, self.city, self.state, self.zip, self.delivery_deadline, self.weight,  self.constraint, self.departure_time,self.delivery_time))
 
 #Class representing trucks utilized for package delivery services with attributes for tracking and routing purposes [Overall Time: O(1), Space: O(1)]
 class Truck:
@@ -189,9 +189,16 @@ def packageDelivery(truck):
 
         #Find the nearest package to current location of the truck
         for package in routing:
+
+            #check if package requires an update
+            if package.package_ID == 9:
+                updateAddress(package, truck.departure_time)
+
+            #check for next smallest distance
             if findDistance(truck.current_stop, package.address) <= next_stop:
                 next_stop = findDistance(truck.current_stop, package.address)
                 next_package = package
+
         route.append(next_package.package_ID)
         routing.remove(next_package)
         truck.miles += next_stop #keep summing miles for final calculations
@@ -231,6 +238,20 @@ def updateStatus(package_ID, time):
         package.status = "delivered"
         #return package.status
         return package
+
+#Update address and zip attributes of a package at a specified time.  [Overall Time: O(1)  Space: O(1)]
+def updateAddress(package, time):
+
+    #Makes sure you return correct package for any time period [Time: O(1)  Space: O(1)]
+    if time >= datetime.timedelta(hours=10, minutes=20):
+
+        package.address = "410 S State St"
+        package.zip = "84111"
+
+    else:
+
+        package.address = "300 State St"
+        package.zip = "84103"
 
 #Load all necessary data structures and class objects for program functionality
 h = ChainingHashTable()
@@ -316,6 +337,8 @@ while True:
                 hour,min = time.split(":")
                 requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
                 status = updateStatus(id, requested_time)
+                if id == 9:
+                    updateAddress(status, requested_time)
                 print(f"At {time}, package {status.package_ID}'s status was {status.status}. [ {status} ]\n")
 
             else:
@@ -333,6 +356,8 @@ while True:
         requested_time = datetime.timedelta(hours=int(hour), minutes=int(min))
         for i in range (1,41):
             status = updateStatus(i, requested_time)
+            if i == 9:
+                updateAddress(status, requested_time)
             print(f"At {time}, package {status.package_ID}'s status was {status.status}. [ {status} ]\n")
 
     elif response == "4":
@@ -361,4 +386,4 @@ while True:
 
     else:
 
-        print("Please select from the provided options 'Type 1 - 4'.")
+        print("Please select from the provided options 'Type 1 - 5'.")
